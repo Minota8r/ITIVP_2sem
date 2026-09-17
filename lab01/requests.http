@@ -1,0 +1,100 @@
+@host = http://localhost:3000
+
+### 1. Все объявления
+GET {{host}}/listings
+
+### 2. Поиск и фильтр по категории
+GET {{host}}/listings?search=iphone&category=electronics
+
+### 3. Одно объявление
+GET {{host}}/listings/1
+
+### 4. Добавление объявления
+
+POST {{host}}/listings
+Content-Type: application/json
+
+{
+  "title": "Диван угловой",
+  "description": "Раскладной, серый, самовывоз",
+  "price": 250,
+  "category": "home",
+  "author": "Ольга",
+  "city": "Брест"
+}
+
+### 5. Полное обновление объявления
+PUT {{host}}/listings/2
+Content-Type: application/json
+
+{
+  "title": "Велосипед Stels Navigator 500",
+  "description": "Горный, 21 скорость, после ТО, торг",
+  "price": 350,
+  "category": "transport",
+  "author": "Марина",
+  "city": "Гродно"
+}
+
+### 6. Удаление объявления
+DELETE {{host}}/listings/4
+
+### 7. Ошибка 404 — объявление не найдено
+GET {{host}}/listings/67
+
+### 8. Ошибка 400 — некорректный id
+GET {{host}}/listings/abc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 9. Ошибка 400 — неверные данные
+POST {{host}}/listings
+Content-Type: application/json
+
+{
+  "title": "",
+  "price": -10,
+  "category": "cars"
+}
+
+### 10. Ошибка 400 — сломанный JSON глобальный обработчик ошибок
+POST {{host}}/listings
+Content-Type: application/json
+
+{ "title": "Без закрывающей скобки"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 11. Ошибка 404 — неизвестный маршрут
+GET {{host}}/unknown
