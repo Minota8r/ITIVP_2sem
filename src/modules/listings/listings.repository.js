@@ -1,7 +1,6 @@
 const seed = require('./listings.seed');
 
 // Хранилище объявлений в памяти сервера.
-// При переходе на базу данных меняется только этот файл.
 const listings = structuredClone(seed);
 let nextId = Math.max(0, ...listings.map((item) => item.id)) + 1;
 
