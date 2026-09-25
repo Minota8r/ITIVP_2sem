@@ -1,0 +1,4 @@
+// Подгружает .env, чтобы sequelize-cli видел DATABASE_URL
+require('dotenv').config({ quiet: true });
+
+module.exports = {};

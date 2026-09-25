@@ -6,11 +6,13 @@ GET {{host}}/listings
 ### 2. Поиск и фильтр по категории
 GET {{host}}/listings?search=iphone&category=electronics
 
-### 3. Одно объявление
+### 3. Фильтр по статусу (поле из миграции)
+GET {{host}}/listings?status=sold
+
+### 4. Одно объявление
 GET {{host}}/listings/1
 
-### 4. Добавление объявления
-
+### 5. Добавление объявления
 POST {{host}}/listings
 Content-Type: application/json
 
@@ -18,12 +20,12 @@ Content-Type: application/json
   "title": "Диван угловой",
   "description": "Раскладной, серый, самовывоз",
   "price": 250,
-  "category": "home",
+  "categoryId": 6,
   "author": "Ольга",
   "city": "Брест"
 }
 
-### 5. Полное обновление объявления
+### 6. Полное обновление объявления
 PUT {{host}}/listings/2
 Content-Type: application/json
 
@@ -31,70 +33,56 @@ Content-Type: application/json
   "title": "Велосипед Stels Navigator 500",
   "description": "Горный, 21 скорость, после ТО, торг",
   "price": 350,
-  "category": "transport",
+  "categoryId": 2,
   "author": "Марина",
-  "city": "Гродно"
+  "city": "Гродно",
+  "status": "sold"
 }
 
-### 6. Удаление объявления
-DELETE {{host}}/listings/4
+### 7. Удаление объявления
+DELETE {{host}}/listings/8
 
-### 7. Ошибка 404 — объявление не найдено
+### 8. Все категории
+GET {{host}}/categories
+
+### 9. Категория со своими объявлениями (связь один-ко-многим)
+GET {{host}}/categories/1
+
+### 10. Ошибка 404 — объявление не найдено
 GET {{host}}/listings/67
 
-### 8. Ошибка 400 — некорректный id
+### 11. Ошибка 400 — некорректный id
 GET {{host}}/listings/abc
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### 9. Ошибка 400 — неверные данные
+### 12. Ошибка 400 — неверные данные
 POST {{host}}/listings
 Content-Type: application/json
 
 {
   "title": "",
   "price": -10,
-  "category": "cars"
+  "categoryId": "cars",
+  "status": "deleted"
 }
 
-### 10. Ошибка 400 — сломанный JSON глобальный обработчик ошибок
+### 13. Ошибка 400 — несуществующая категория
+POST {{host}}/listings
+Content-Type: application/json
+
+{
+  "title": "Телевизор",
+  "description": "Samsung 55 дюймов",
+  "price": 700,
+  "categoryId": 99,
+  "author": "Павел",
+  "city": "Минск"
+}
+
+### 14. Ошибка 400 — сломанный JSON
 POST {{host}}/listings
 Content-Type: application/json
 
 { "title": "Без закрывающей скобки"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### 11. Ошибка 404 — неизвестный маршрут
+### 15. Ошибка 404 — неизвестный маршрут
 GET {{host}}/unknown

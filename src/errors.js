@@ -35,6 +35,25 @@ function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: 'Некорректный JSON в теле запроса' });
   }
 
+  // Ошибки Sequelize
+  if (err.name === 'SequelizeUniqueConstraintError') {
+    return res.status(409).json({
+      error: 'Запись с такими данными уже существует',
+      details: err.errors.map((e) => `${e.path}: ${e.value}`)
+    });
+  }
+
+  if (err.name === 'SequelizeValidationError') {
+    return res.status(400).json({
+      error: 'Неверные данные',
+      details: err.errors.map((e) => e.message)
+    });
+  }
+
+  if (err.name === 'SequelizeForeignKeyConstraintError') {
+    return res.status(400).json({ error: 'Ссылка на несуществующую запись' });
+  }
+
   console.error(err);
   const status = err.status || 500;
   res.status(status).json({ error: status === 500 ? 'Внутренняя ошибка сервера' : err.message });
