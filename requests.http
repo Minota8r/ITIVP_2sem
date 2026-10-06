@@ -1,62 +1,204 @@
 @host = http://localhost:3000
 
-### 1. Все объявления
+# Токены подставляются из ответов на запросы 2 и 3
+@userToken = {{loginUser.response.body.token}}
+@adminToken = {{loginAdmin.response.body.token}}
+
+### 1. Регистрация пользователя
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "olga@example.com",
+  "password": "secret123",
+  "name": "Ольга"
+}
+
+### 2. Вход пользователя (выдаётся JWT)
+# @name loginUser
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "olga@example.com",
+  "password": "secret123"
+}
+
+### 3. Вход администратора
+# @name loginAdmin
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "admin123"
+}
+
+### 4. Профиль текущего пользователя (защищённый маршрут)
+GET {{host}}/profile
+Authorization: Bearer {{userToken}}
+
+### 5. Все объявления (токен не нужен)
 GET {{host}}/listings
 
-### 2. Поиск и фильтр по категории
+### 6. Поиск и фильтр по категории
 GET {{host}}/listings?search=iphone&category=electronics
 
-### 3. Фильтр по статусу (поле из миграции)
+### 7. Фильтр по статусу
 GET {{host}}/listings?status=sold
 
-### 4. Одно объявление
+### 8. Одно объявление
 GET {{host}}/listings/1
 
-### 5. Добавление объявления
+### 9. Добавление объявления (автор берётся из токена)
 POST {{host}}/listings
 Content-Type: application/json
+Authorization: Bearer {{userToken}}
 
 {
   "title": "Диван угловой",
   "description": "Раскладной, серый, самовывоз",
   "price": 250,
   "categoryId": 6,
-  "author": "Ольга",
   "city": "Брест"
 }
 
-### 6. Полное обновление объявления
-PUT {{host}}/listings/2
+### 10. Обновление своего объявления
+PUT {{host}}/listings/8
 Content-Type: application/json
+Authorization: Bearer {{userToken}}
 
 {
-  "title": "Велосипед Stels Navigator 500",
-  "description": "Горный, 21 скорость, после ТО, торг",
-  "price": 350,
-  "categoryId": 2,
-  "author": "Марина",
-  "city": "Гродно",
+  "title": "Диван угловой, торг",
+  "description": "Раскладной, серый, самовывоз",
+  "price": 220,
+  "categoryId": 6,
+  "city": "Брест",
   "status": "sold"
 }
 
-### 7. Удаление объявления
+### 11. Удаление своего объявления
 DELETE {{host}}/listings/8
+Authorization: Bearer {{userToken}}
 
-### 8. Все категории
+### 12. Все категории
 GET {{host}}/categories
 
-### 9. Категория со своими объявлениями (связь один-ко-многим)
+### 13. Категория со своими объявлениями (связь один-ко-многим)
 GET {{host}}/categories/1
 
-### 10. Ошибка 404 — объявление не найдено
-GET {{host}}/listings/67
+### 14. Добавление категории (только администратор)
+POST {{host}}/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
 
-### 11. Ошибка 400 — некорректный id
-GET {{host}}/listings/abc
+{
+  "slug": "animals",
+  "name": "Животные"
+}
 
-### 12. Ошибка 400 — неверные данные
+### 15. Изменение категории (только администратор)
+PUT {{host}}/categories/9
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "slug": "pets",
+  "name": "Домашние животные"
+}
+
+### 16. Удаление категории (только администратор)
+DELETE {{host}}/categories/9
+Authorization: Bearer {{adminToken}}
+
+### 17. Удаление чужого объявления администратором
+DELETE {{host}}/listings/7
+Authorization: Bearer {{adminToken}}
+
+### 18. Ошибка 409 — email уже занят
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "olga@example.com",
+  "password": "another123",
+  "name": "Ольга"
+}
+
+### 19. Ошибка 400 — неверные данные регистрации
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "123"
+}
+
+### 20. Ошибка 401 — неверный пароль
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "olga@example.com",
+  "password": "wrong-password"
+}
+
+### 21. Ошибка 401 — защищённый маршрут без токена
+GET {{host}}/profile
+
+### 22. Ошибка 401 — недействительный токен
+GET {{host}}/profile
+Authorization: Bearer abc.def.ghi
+
+### 23. Ошибка 401 — добавление объявления без токена
 POST {{host}}/listings
 Content-Type: application/json
+
+{
+  "title": "Телевизор",
+  "description": "Samsung 55 дюймов",
+  "price": 700,
+  "categoryId": 1,
+  "city": "Минск"
+}
+
+### 24. Ошибка 403 — изменение чужого объявления
+PUT {{host}}/listings/1
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "title": "iPhone 13 даром",
+  "description": "Чужое объявление",
+  "price": 0,
+  "categoryId": 1,
+  "city": "Минск"
+}
+
+### 25. Ошибка 403 — добавление категории обычным пользователем
+POST {{host}}/categories
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "slug": "animals",
+  "name": "Животные"
+}
+
+### 26. Ошибка 409 — удаление категории с объявлениями
+DELETE {{host}}/categories/1
+Authorization: Bearer {{adminToken}}
+
+### 27. Ошибка 404 — объявление не найдено
+GET {{host}}/listings/67
+
+### 28. Ошибка 400 — некорректный id
+GET {{host}}/listings/abc
+
+### 29. Ошибка 400 — неверные данные объявления
+POST {{host}}/listings
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
 
 {
   "title": "",
@@ -65,24 +207,24 @@ Content-Type: application/json
   "status": "deleted"
 }
 
-### 13. Ошибка 400 — несуществующая категория
+### 30. Ошибка 400 — несуществующая категория
 POST {{host}}/listings
 Content-Type: application/json
+Authorization: Bearer {{userToken}}
 
 {
   "title": "Телевизор",
   "description": "Samsung 55 дюймов",
   "price": 700,
   "categoryId": 99,
-  "author": "Павел",
   "city": "Минск"
 }
 
-### 14. Ошибка 400 — сломанный JSON
+### 31. Ошибка 400 — сломанный JSON
 POST {{host}}/listings
 Content-Type: application/json
 
 { "title": "Без закрывающей скобки"
 
-### 15. Ошибка 404 — неизвестный маршрут
+### 32. Ошибка 404 — неизвестный маршрут
 GET {{host}}/unknown

@@ -2,12 +2,16 @@ const { Router } = require('express');
 const { Op } = require('sequelize');
 
 const { HttpError } = require('./errors');
-const { Listing, Category } = require('../models');
+const { authenticate } = require('./middleware');
+const { Listing, Category, User } = require('../models');
 
-const STRING_FIELDS = ['title', 'description', 'author', 'city'];
+const STRING_FIELDS = ['title', 'description', 'city'];
 
-// Категория подгружается вместе с объявлением
-const WITH_CATEGORY = { model: Category, as: 'category', attributes: ['id', 'slug', 'name'] };
+// Категория и автор подгружаются вместе с объявлением
+const WITH_RELATIONS = [
+  { model: Category, as: 'category', attributes: ['id', 'slug', 'name'] },
+  { model: User, as: 'user', attributes: ['id', 'name'] }
+];
 
 // Проверка полей объявления, выбрасывает 400 со списком ошибок
 function assertValid(body) {
@@ -47,7 +51,6 @@ function pickListingFields(body) {
     description: body.description.trim(),
     price: body.price,
     categoryId: body.categoryId,
-    author: body.author.trim(),
     city: body.city.trim()
   };
 
@@ -65,11 +68,18 @@ async function assertCategoryExists(categoryId) {
 }
 
 async function findOrThrow(id) {
-  const listing = await Listing.findByPk(id, { include: WITH_CATEGORY });
+  const listing = await Listing.findByPk(id, { include: WITH_RELATIONS });
   if (!listing) {
     throw HttpError.notFound(`Объявление с id ${id} не найдено`);
   }
   return listing;
+}
+
+// Менять и удалять объявление может только его автор или администратор
+function assertCanModify(listing, user) {
+  if (listing.userId !== user.id && user.role !== 'admin') {
+    throw HttpError.forbidden('Изменять объявление может только его автор или администратор');
+  }
 }
 
 const router = Router();
@@ -113,7 +123,7 @@ router.get('/', async (req, res) => {
     ];
   }
 
-  res.json(await Listing.findAll({ where, include: WITH_CATEGORY, order: [['id', 'ASC']] }));
+  res.json(await Listing.findAll({ where, include: WITH_RELATIONS, order: [['id', 'ASC']] }));
 });
 
 // GET /listings/:id — одно объявление
@@ -121,37 +131,35 @@ router.get('/:id', async (req, res) => {
   res.json(await findOrThrow(req.params.id));
 });
 
-// POST /listings — добавление объявления
-router.post('/', async (req, res) => {
+// POST /listings — добавление объявления (автор берётся из токена)
+router.post('/', authenticate, async (req, res) => {
   assertValid(req.body);
   await assertCategoryExists(req.body.categoryId);
 
-  const { id } = await Listing.create(pickListingFields(req.body));
+  const { id } = await Listing.create({ ...pickListingFields(req.body), userId: req.user.id });
 
   res.status(201).location(`${req.baseUrl}/${id}`).json(await findOrThrow(id));
 });
 
-// PUT /listings/:id — полное обновление объявления
-router.put('/:id', async (req, res) => {
+// PUT /listings/:id — полное обновление объявления (автор или администратор)
+router.put('/:id', authenticate, async (req, res) => {
+  const listing = await findOrThrow(req.params.id);
+  assertCanModify(listing, req.user);
+
   assertValid(req.body);
   await assertCategoryExists(req.body.categoryId);
 
-  const [updated] = await Listing.update(pickListingFields(req.body), {
-    where: { id: req.params.id }
-  });
-  if (updated === 0) {
-    throw HttpError.notFound(`Объявление с id ${req.params.id} не найдено`);
-  }
+  await listing.update(pickListingFields(req.body));
 
   res.json(await findOrThrow(req.params.id));
 });
 
-// DELETE /listings/:id — удаление объявления
-router.delete('/:id', async (req, res) => {
-  const deleted = await Listing.destroy({ where: { id: req.params.id } });
-  if (deleted === 0) {
-    throw HttpError.notFound(`Объявление с id ${req.params.id} не найдено`);
-  }
+// DELETE /listings/:id — удаление объявления (автор или администратор)
+router.delete('/:id', authenticate, async (req, res) => {
+  const listing = await findOrThrow(req.params.id);
+  assertCanModify(listing, req.user);
+
+  await listing.destroy();
   res.status(204).end();
 });
 

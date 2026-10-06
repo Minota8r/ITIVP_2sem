@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // Каждое объявление относится к одной категории
       Listing.belongsTo(models.Category, { foreignKey: 'categoryId', as: 'category' });
+      // и принадлежит одному пользователю
+      Listing.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
     }
   }
 
@@ -32,15 +34,15 @@ module.exports = (sequelize, DataTypes) => {
           return value === null ? null : Number(value);
         }
       },
-      author: {
-        type: DataTypes.STRING,
-        allowNull: false
-      },
       city: {
         type: DataTypes.STRING,
         allowNull: false
       },
       categoryId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
+      userId: {
         type: DataTypes.INTEGER,
         allowNull: false
       },
