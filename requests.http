@@ -228,3 +228,23 @@ Content-Type: application/json
 
 ### 32. Ошибка 404 — неизвестный маршрут
 GET {{host}}/unknown
+
+### 33. Мои объявления во всех статусах (защищённый маршрут)
+GET {{host}}/profile/listings
+Authorization: Bearer {{userToken}}
+
+### 34. Мои проданные объявления
+GET {{host}}/profile/listings?status=sold
+Authorization: Bearer {{userToken}}
+
+### 35. Объявления конкретного автора (публичная страница продавца)
+GET {{host}}/listings?userId=2&status=active
+
+### 36. Ошибка 401 — мои объявления без токена
+GET {{host}}/profile/listings
+
+### 37. Ошибка 400 — некорректный userId
+GET {{host}}/listings?userId=abc
+
+### 38. Ошибка 400 — несуществующий автор
+GET {{host}}/listings?userId=999

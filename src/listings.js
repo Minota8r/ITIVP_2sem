@@ -95,10 +95,21 @@ router.param('id', (req, res, next, value) => {
   next();
 });
 
-// GET /listings — список объявлений (поиск, фильтр по категории и статусу)
+// GET /listings — список объявлений (поиск, фильтр по категории, статусу и автору)
 router.get('/', async (req, res) => {
-  const { search, category, status } = req.query;
+  const { search, category, status, userId } = req.query;
   const where = {};
+
+  if (userId !== undefined) {
+    const id = Number(userId);
+    if (!Number.isInteger(id) || id <= 0) {
+      throw HttpError.badRequest('Параметр userId должен быть положительным целым числом');
+    }
+    if (!(await User.findByPk(id))) {
+      throw HttpError.badRequest(`Пользователь с id ${id} не существует`);
+    }
+    where.userId = id;
+  }
 
   if (category) {
     const found = await Category.findOne({ where: { slug: String(category) } });
