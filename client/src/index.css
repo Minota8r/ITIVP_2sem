@@ -34,9 +34,23 @@ h3 {
 }
 
 .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
   padding: 20px 24px;
   background: var(--primary);
   color: #fff;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user button {
+  color: var(--primary);
 }
 
 .header h1 {
@@ -80,8 +94,6 @@ h3 {
   font-size: 17px;
   margin-bottom: 12px;
 }
-
-/* Элементы управления */
 
 input,
 textarea,
@@ -165,8 +177,6 @@ button.link:hover {
   text-decoration: underline;
 }
 
-/* Форма */
-
 .form label {
   display: block;
   margin: 10px 0 4px;
@@ -208,8 +218,6 @@ button.link:hover {
   gap: 8px;
 }
 
-/* Статистика */
-
 .stats dl {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -226,20 +234,6 @@ button.link:hover {
   font-weight: 600;
   text-align: right;
 }
-
-.save-status {
-  margin: 14px 0 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-  font-size: 13px;
-  color: var(--active);
-}
-
-.save-pending {
-  color: #d97706;
-}
-
-/* Фильтры и список */
 
 .filters {
   display: flex;
@@ -351,6 +345,91 @@ button.link:hover {
   color: var(--muted);
   border: 1px dashed #d1d5db;
   border-radius: 10px;
+}
+
+.listing-pending {
+  opacity: 0.6;
+}
+
+.pending-label,
+.loading-inline {
+  color: #d97706;
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 40px;
+  color: var(--muted);
+}
+
+.state-error {
+  flex-direction: column;
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.state-error p {
+  margin: 0;
+  text-align: center;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.toasts {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10;
+  display: grid;
+  gap: 8px;
+  width: min(360px, calc(100vw - 40px));
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--danger);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+}
+
+.toast-success {
+  background: var(--active);
+}
+
+.toast-close {
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.toast-close:hover:not(:disabled) {
+  background: none;
 }
 
 @media (max-width: 900px) {

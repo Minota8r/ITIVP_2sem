@@ -1,6 +1,7 @@
 require('dotenv').config({ quiet: true });
 
 const express = require('express');
+const cors = require('cors');
 
 const { sequelize } = require('./models');
 const listings = require('./src/listings');
@@ -18,6 +19,7 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 
+app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 
 app.use('/listings', listings);

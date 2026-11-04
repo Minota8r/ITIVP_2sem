@@ -11,7 +11,6 @@ const EMPTY_FORM = {
   status: 'active'
 };
 
-// В полях формы всё хранится строками, как их отдаёт input
 function toForm(listing) {
   return {
     title: listing.title,
@@ -23,7 +22,6 @@ function toForm(listing) {
   };
 }
 
-// Те же правила, что и при проверке тела запроса на сервере
 function validate(form) {
   const errors = {};
 
@@ -39,8 +37,6 @@ function validate(form) {
   return errors;
 }
 
-// Форма добавления и редактирования. При смене редактируемого объявления
-// родитель меняет key, и форма создаётся заново со своим начальным состоянием.
 export default function ListingForm({ editing, onSubmit, onCancel }) {
   const [form, setForm] = useState(() => (editing ? toForm(editing) : EMPTY_FORM));
   const [errors, setErrors] = useState({});
@@ -48,7 +44,6 @@ export default function ListingForm({ editing, onSubmit, onCancel }) {
   const titleRef = useRef(null);
   const isEditing = Boolean(editing);
 
-  // При переходе к редактированию прокручиваем к форме и ставим фокус в название
   useEffect(() => {
     if (!isEditing) return;
     formRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -94,7 +89,6 @@ export default function ListingForm({ editing, onSubmit, onCancel }) {
     }
   }
 
-  // Enter в однострочных полях отправляет форму сам; здесь Ctrl+Enter и Esc
   function handleKeyDown(event) {
     if (event.key === 'Escape') {
       handleCancel();

@@ -5,7 +5,6 @@ import { CATEGORIES, SORTS, STATUSES } from './data';
 export default function ListingFilters({ filters, onChange, onReset }) {
   const searchRef = useRef(null);
 
-  // Горячая клавиша «/» ставит фокус в поиск (если пользователь не печатает в другом поле)
   useEffect(() => {
     function handleKeyDown(event) {
       const tag = event.target.tagName;

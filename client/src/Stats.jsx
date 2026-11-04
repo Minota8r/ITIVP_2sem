@@ -1,13 +1,6 @@
 import { formatPrice } from './data';
 
-export default function Stats({ stats, pending, savedAt, onRestoreDemo }) {
-  let saveStatus = 'Данные загружены из localStorage';
-  if (pending) {
-    saveStatus = 'Сохранение…';
-  } else if (savedAt) {
-    saveStatus = `Сохранено в ${savedAt.toLocaleTimeString('ru-RU')}`;
-  }
-
+export default function Stats({ stats }) {
   return (
     <section className="card stats">
       <h2>Статистика</h2>
@@ -23,11 +16,6 @@ export default function Stats({ stats, pending, savedAt, onRestoreDemo }) {
         <dt>Сумма активных</dt>
         <dd>{formatPrice(stats.activeSum)}</dd>
       </dl>
-
-      <p className={`save-status${pending ? ' save-pending' : ''}`}>{saveStatus}</p>
-      <button type="button" className="link" onClick={onRestoreDemo}>
-        Восстановить демо-данные
-      </button>
     </section>
   );
 }
