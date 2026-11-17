@@ -1,0 +1,243 @@
+@host = http://localhost:3001
+
+@alexeyToken = {{loginAlexey.response.body.token}}
+@marinaToken = {{loginMarina.response.body.token}}
+@olgaToken = {{loginOlga.response.body.token}}
+@adminToken = {{loginAdmin.response.body.token}}
+
+@categoryId = {{categories.response.body.$[0].id}}
+@listingId = {{createdListing.response.body.id}}
+@conversationId = {{createdConversation.response.body.id}}
+@replyId = {{reply.response.body.id}}
+
+### 1. Регистрация пользователя
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "olga@example.com",
+  "password": "secret123",
+  "name": "Ольга"
+}
+
+### 2. Вход Ольги
+# @name loginOlga
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "olga@example.com",
+  "password": "secret123"
+}
+
+### 3. Вход Алексея (продавец)
+# @name loginAlexey
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "alexey@example.com",
+  "password": "password123"
+}
+
+### 4. Вход Марины (покупатель)
+# @name loginMarina
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "marina@example.com",
+  "password": "password123"
+}
+
+### 5. Вход администратора
+# @name loginAdmin
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "admin123"
+}
+
+### 6. Профиль текущего пользователя
+GET {{host}}/profile
+Authorization: Bearer {{alexeyToken}}
+
+### 7. Список категорий
+# @name categories
+GET {{host}}/categories
+
+### 8. Все объявления (find + populate автора)
+GET {{host}}/listings
+
+### 9. Фильтр по вложенному полю category.slug
+GET {{host}}/listings?category=electronics
+
+### 10. Поиск по названию и описанию ($regex)
+GET {{host}}/listings?search=ноут
+
+### 11. Поиск по массиву тегов (tags содержит «торг»)
+GET {{host}}/listings?tag=торг
+
+### 12. Статистика по категориям (aggregation pipeline)
+GET {{host}}/listings/stats
+
+### 13. Добавление объявления с тегами
+# @name createdListing
+POST {{host}}/listings
+Authorization: Bearer {{alexeyToken}}
+Content-Type: application/json
+
+{
+  "title": "Наушники Sony WH-1000XM4",
+  "description": "Шумоподавление, кейс и кабель в комплекте",
+  "price": 450,
+  "city": "Минск",
+  "categoryId": "{{categoryId}}",
+  "tags": ["Наушники", "sony", "торг"]
+}
+
+### 14. Объявление по id (findById)
+GET {{host}}/listings/{{listingId}}
+
+### 15. Изменение объявления автором (findByIdAndUpdate)
+PUT {{host}}/listings/{{listingId}}
+Authorization: Bearer {{alexeyToken}}
+Content-Type: application/json
+
+{
+  "title": "Наушники Sony WH-1000XM4",
+  "description": "Шумоподавление, кейс и кабель в комплекте",
+  "price": 400,
+  "city": "Минск",
+  "categoryId": "{{categoryId}}",
+  "status": "active",
+  "tags": ["наушники", "sony", "скидка"]
+}
+
+### 16. Изменение чужого объявления — 403
+PUT {{host}}/listings/{{listingId}}
+Authorization: Bearer {{marinaToken}}
+Content-Type: application/json
+
+{
+  "title": "Чужое",
+  "description": "Попытка изменить чужое объявление",
+  "price": 1,
+  "city": "Минск",
+  "categoryId": "{{categoryId}}"
+}
+
+### 17. Неверные данные — 400
+POST {{host}}/listings
+Authorization: Bearer {{alexeyToken}}
+Content-Type: application/json
+
+{
+  "title": "",
+  "price": -5,
+  "categoryId": "123",
+  "tags": "не массив"
+}
+
+### 18. Некорректный id — 400
+GET {{host}}/listings/123
+
+### 19. Несуществующий id — 404
+GET {{host}}/listings/000000000000000000000000
+
+### 20. Мои объявления
+GET {{host}}/profile/listings
+Authorization: Bearer {{alexeyToken}}
+
+### 21. Переименование категории — копии в объявлениях обновляются (updateMany)
+PUT {{host}}/categories/{{categoryId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "slug": "home-garden",
+  "name": "Дом, сад и дача"
+}
+
+### 22. Марина пишет продавцу — создаётся диалог
+# @name createdConversation
+POST {{host}}/conversations
+Authorization: Bearer {{marinaToken}}
+Content-Type: application/json
+
+{
+  "listingId": "{{listingId}}",
+  "text": "Здравствуйте! Наушники ещё продаются?"
+}
+
+### 23. Повторное сообщение — добавляется в тот же диалог ($push)
+POST {{host}}/conversations
+Authorization: Bearer {{marinaToken}}
+Content-Type: application/json
+
+{
+  "listingId": "{{listingId}}",
+  "text": "Могу забрать сегодня у метро"
+}
+
+### 24. Диалоги Алексея с числом непрочитанных
+GET {{host}}/conversations
+Authorization: Bearer {{alexeyToken}}
+
+### 25. Диалог целиком — сообщения не прочитаны
+GET {{host}}/conversations/{{conversationId}}
+Authorization: Bearer {{alexeyToken}}
+
+### 26. Отметить сообщения прочитанными (обновление элементов массива, arrayFilters)
+PATCH {{host}}/conversations/{{conversationId}}/read
+Authorization: Bearer {{alexeyToken}}
+
+### 27. Диалог после прочтения — read: true
+GET {{host}}/conversations/{{conversationId}}
+Authorization: Bearer {{alexeyToken}}
+
+### 28. Ответ продавца
+# @name reply
+POST {{host}}/conversations/{{conversationId}}/messages
+Authorization: Bearer {{alexeyToken}}
+Content-Type: application/json
+
+{
+  "text": "Да, продаются. Сегодня после 18:00 удобно"
+}
+
+### 29. Диалоги Марины — один непрочитанный ответ
+GET {{host}}/conversations
+Authorization: Bearer {{marinaToken}}
+
+### 30. Написать по своему объявлению — 400
+POST {{host}}/conversations
+Authorization: Bearer {{alexeyToken}}
+Content-Type: application/json
+
+{
+  "listingId": "{{listingId}}",
+  "text": "Сам себе"
+}
+
+### 31. Чужой диалог — 403
+GET {{host}}/conversations/{{conversationId}}
+Authorization: Bearer {{olgaToken}}
+
+### 32. Удаление чужого сообщения — 403
+DELETE {{host}}/conversations/{{conversationId}}/messages/{{replyId}}
+Authorization: Bearer {{marinaToken}}
+
+### 33. Удаление своего сообщения ($pull)
+DELETE {{host}}/conversations/{{conversationId}}/messages/{{replyId}}
+Authorization: Bearer {{alexeyToken}}
+
+### 34. Удаление объявления — возвращается удалённый документ, диалоги удаляются каскадно
+DELETE {{host}}/listings/{{listingId}}
+Authorization: Bearer {{alexeyToken}}
+
+### 35. Диалог после удаления объявления — 404
+GET {{host}}/conversations/{{conversationId}}
+Authorization: Bearer {{alexeyToken}}

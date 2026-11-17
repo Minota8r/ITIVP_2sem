@@ -66,6 +66,24 @@ function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: 'Ссылка на несуществующую запись' });
   }
 
+  if (err.name === 'CastError') {
+    return res.status(400).json({ error: `Некорректное значение поля "${err.path}"` });
+  }
+
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      error: 'Неверные данные',
+      details: Object.values(err.errors).map((e) => e.message)
+    });
+  }
+
+  if (err.code === 11000) {
+    return res.status(409).json({
+      error: 'Запись с такими данными уже существует',
+      details: Object.entries(err.keyValue || {}).map(([key, value]) => `${key}: ${value}`)
+    });
+  }
+
   console.error(err);
   const status = err.status || 500;
   res.status(status).json({ error: status === 500 ? 'Внутренняя ошибка сервера' : err.message });
